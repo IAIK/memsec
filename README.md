@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/IAIK/memsec.svg?branch=develop)](https://travis-ci.org/IAIK/memsec)
+
 # Transparent Memory Encryption and Authentication
 
 VHDL code of the [Transparent Memory Encryption and Authentication](https://eprint.iacr.org/2017/674) framework which has been published at [FPL 2017](https://www.fpl2017.org/). Additionally, the implemenation of a novel side-channel secure memory encryption scheme called [MEAS](https://eprint.iacr.org/2017/663) is included.

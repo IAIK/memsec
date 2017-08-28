@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/IAIK/memsec.svg?branch=develop)](https://travis-ci.org/IAIK/memsec)
+[![Build Status](https://travis-ci.org/IAIK/memsec.svg?branch=v0.1)](https://travis-ci.org/IAIK/memsec)
 
 # Transparent Memory Encryption and Authentication
 

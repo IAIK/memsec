@@ -1,0 +1,13 @@
+vivado:
+  image: vivado:2016.2
+  tags:
+    - vivado
+  script:
+    - python3 run_tests.py
+
+ghdl:
+  image: nioshd/ghdl:latest
+  tags:
+    - gitlabci
+  script:
+    - python3 run_tests.py

@@ -40,8 +40,8 @@ do
 done
 
 # run the simulation
-echo "\$ ${FLOW_GHDL_BINARY} -r ${FLOW_SIMTOP} ${GHDL_OPTIONS} 2>&1 | tee \"${FLOW_BINARY_ROOT_DIR}/${FLOW_MODULE}_${FLOW_SIMTOP}_simulation.log\""
-${FLOW_GHDL_BINARY} -r ${FLOW_SIMTOP} ${GHDL_OPTIONS} 2>&1 | tee "${FLOW_BINARY_ROOT_DIR}/${FLOW_MODULE}_${FLOW_SIMTOP}_simulation.log"
+echo "\$ ${FLOW_GHDL_BINARY} -r ${FLOW_GHDL_CFLAGS} ${FLOW_SIMTOP} ${GHDL_OPTIONS} 2>&1 | tee \"${FLOW_BINARY_ROOT_DIR}/${FLOW_MODULE}_${FLOW_SIMTOP}_simulation.log\""
+${FLOW_GHDL_BINARY} -r ${FLOW_GHDL_CFLAGS} ${FLOW_SIMTOP} ${GHDL_OPTIONS} 2>&1 | tee "${FLOW_BINARY_ROOT_DIR}/${FLOW_MODULE}_${FLOW_SIMTOP}_simulation.log"
 
 # launch gtkwave if requested
 if [ "1" = "${FLOW_GTKWAVE_GUI}" ]; then

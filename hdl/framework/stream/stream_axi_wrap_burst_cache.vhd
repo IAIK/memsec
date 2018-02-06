@@ -55,7 +55,7 @@ architecture behavioral of stream_axi_wrap_burst_cache is
   constant CACHE_SIZE_BITS        : integer := log2_ceil(CACHE_SIZE/8);
   constant DATASTREAM_WIDTH_BYTES : integer := DATASTREAM_WIDTH/8;
   constant DATASTREAM_WIDTH_BITS  : integer := log2_ceil(DATASTREAM_WIDTH_BYTES);
-  type CacheArrayType is array (CACHE_ELEMENTS-1 downto 0) of std_logic_vector(31 downto 0);
+  type CacheArrayType is array (CACHE_ELEMENTS-1 downto 0) of std_logic_vector(DATASTREAM_WIDTH-1 downto 0);
   type CacheState is array (CACHE_ELEMENTS-1 downto 0) of std_logic;
 
   signal CachexDP, CachexDN                   : CacheArrayType;

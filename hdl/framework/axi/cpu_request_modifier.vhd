@@ -37,6 +37,7 @@ entity cpu_request_modifier is
   generic(
     C_S_AXI_ID_WIDTH    : integer   := 12;
     C_S_AXI_ADDR_WIDTH  : integer   := 32;
+    C_S_AXI_DATA_WIDTH  : integer   := 32;
     C_S_AXI_AUSER_WIDTH : integer   := 0;
     READ                : std_logic := '0';
     DOUBLE_LINEFILL     : boolean   := false
@@ -69,6 +70,8 @@ architecture behavioral of cpu_request_modifier is
 
   constant STATE_DEFAULT        : std_logic := '0';
   constant STATE_WRAPPING_BURST : std_logic := '1';
+  
+  constant AXI_ASIZE_CACHED_BURST_MASK : std_logic_vector(2 downto 0) := std_logic_vector(to_unsigned(log2_ceil(C_S_AXI_DATA_WIDTH/8),3));
 
   signal StatexDP, StatexDN           : std_logic;
   signal AxiAddressxDP, AxiAddressxDN : std_logic_vector(ADDRESS_WIDTH - 1 downto 0);
@@ -181,12 +184,12 @@ begin
           -- Incremental Burst
           m_request.burst <= "01";
 
-        elsif s_axi_aburst = "10" and vAxiALenBytes = "000011111" and s_axi_asize = "010" then
+        elsif s_axi_aburst = "10" and vAxiALenBytes = "000011111" and s_axi_asize = AXI_ASIZE_CACHED_BURST_MASK then
           -- Optimization: Wrapping burst in cache line size 
           -- Convert into incremental burst and cache later on
           vVirtAddr := vWrapBoundary;
 
-        elsif DOUBLE_LINEFILL = true and s_axi_aburst = "10" and vAxiALenBytes = "000111111" and s_axi_asize = "010" then
+        elsif DOUBLE_LINEFILL = true and s_axi_aburst = "10" and vAxiALenBytes = "000111111" and s_axi_asize = AXI_ASIZE_CACHED_BURST_MASK then
           vVirtAddr := vWrapBoundary;
 
         elsif s_axi_aburst = "10" then

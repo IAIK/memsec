@@ -58,12 +58,12 @@ architecture arch_imp of cpu_read_responder is
 
   signal BlockCounterxDP, BlockCounterxDN : std_logic_vector(s_request.len'length downto 0);
 
-  type tASizeToMaskLUT is array (0 to 2**2 - 1) of std_logic_vector(1 downto 0);
+  type tASizeToMaskLUT is array (0 to 2**2 - 1) of std_logic_vector(2 downto 0);
   constant ASIZE_MASKING_LUT : tASizeToMaskLUT := (
-    0 => "11",
-    1 => "10",
-    2 => "00",
-    3 => "00");
+    0 => "111",
+    1 => "110",
+    2 => "100",
+    3 => "000");
 
 begin
 
@@ -82,6 +82,7 @@ begin
   collapse_logic : process(BlockCounterxDP, s_axi_rready, s_request) is
     variable vAddrOffset : std_logic_vector(BlockCounterxDP'length-1 downto 0);
     variable vCurBlock   : unsigned(BlockCounterxDP'length-1 downto 0);
+    variable vSizeInt    : integer;
     variable vSize       : unsigned(BlockCounterxDP'length-1 downto 0);
     variable vLen        : std_logic_vector(BlockCounterxDP'length-1 downto 0);
   begin
@@ -100,10 +101,11 @@ begin
       s_request_ready <= '0';
       s_axi_rvalid    <= '1';
 
-      vSize       := shift_left((vSize'left downto 1                            => '0') & '1', to_integer(unsigned(s_request.size)));
+      vSizeInt    := to_integer(unsigned(s_request.size));
+      vSize       := shift_left((vSize'left downto 1                            => '0') & '1', vSizeInt);
       vLen        := (vLen'length-1 downto s_request.len'length                 => '0') & s_request.len;
       vLen        := std_logic_vector(shift_left(unsigned(vLen), to_integer(unsigned(s_request.size))));
-      vAddrOffset := (BlockCounterxDP'length-1 downto BUS_BYTE_FIELD_ADDR_WIDTH => '0') & (s_request.address(BUS_BYTE_FIELD_ADDR_WIDTH-1 downto 0) and ASIZE_MASKING_LUT(to_integer(unsigned(s_request.size))));
+      vAddrOffset := (BlockCounterxDP'length-1 downto BUS_BYTE_FIELD_ADDR_WIDTH => '0') & (s_request.address(BUS_BYTE_FIELD_ADDR_WIDTH-1 downto 0) and ASIZE_MASKING_LUT(to_integer(unsigned(s_request.size)))(BUS_BYTE_FIELD_ADDR_WIDTH-1 downto 0));
       vCurBlock   := unsigned(BlockCounterxDP) + unsigned(vAddrOffset);
 
       if s_axi_rready = '1' then
@@ -111,14 +113,11 @@ begin
         BlockCounterxDN <= std_logic_vector(unsigned(BlockCounterxDP) + vSize(BlockCounterxDP'length-1 downto 0));
 
         -- Last subblock before data stream width is reached
-        case to_integer(vSize) is
-          when 1 =>
-            if vCurBlock(1 downto 0) = "11" then s_request_ready <= '1'; end if;
-          when 2 =>
-            if vCurBlock(1 downto 0) = "10" then s_request_ready <= '1'; end if;
-          when 4      => s_request_ready <= '1';
-          when others => null;
-        end case;
+        if vSizeInt > 0 and vSizeInt < ASIZE_MASKING_LUT'length then
+          if std_logic_vector(vCurBlock(BUS_BYTE_FIELD_ADDR_WIDTH-1 downto 0)) = ASIZE_MASKING_LUT(vSizeInt)(BUS_BYTE_FIELD_ADDR_WIDTH-1 downto 0) then 
+            s_request_ready <= '1'; 
+          end if;
+        end if;
 
         -- Last block within transfer
         if (BlockCounterxDP = vLen) then

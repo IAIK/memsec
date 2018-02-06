@@ -229,6 +229,7 @@ begin
     generic map(
       C_S_AXI_ID_WIDTH    => C_S_AXI_ID_WIDTH,
       C_S_AXI_ADDR_WIDTH  => C_S_AXI_ADDR_WIDTH,
+      C_S_AXI_DATA_WIDTH  => C_S_AXI_DATA_WIDTH,
       C_S_AXI_AUSER_WIDTH => C_S_AXI_ARUSER_WIDTH,
       READ                => '1',
       DOUBLE_LINEFILL     => (DATA_BLOCK_SIZE = 64)
@@ -258,6 +259,7 @@ begin
     generic map(
       C_S_AXI_ID_WIDTH    => C_S_AXI_ID_WIDTH,
       C_S_AXI_ADDR_WIDTH  => C_S_AXI_ADDR_WIDTH,
+      C_S_AXI_DATA_WIDTH  => C_S_AXI_DATA_WIDTH,
       C_S_AXI_AUSER_WIDTH => C_S_AXI_AWUSER_WIDTH,
       READ                => '0',
       DOUBLE_LINEFILL     => (DATA_BLOCK_SIZE = 64)

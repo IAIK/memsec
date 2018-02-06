@@ -23,6 +23,8 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 use IEEE.std_logic_textio.all;
 use work.tb_utils_pkg.all;
+use work.memsec_pkg.all;
+use work.memsec_functions.all;
 
 library std;
 use std.textio.all;
@@ -34,7 +36,7 @@ entity tb_rw_blockram is
 
     -- Parameters of Axi Slave Bus Interface S_AXI
     C_S_AXI_ID_WIDTH     : integer := 12;
-    C_S_AXI_DATA_WIDTH   : integer := 32;
+    C_S_AXI_DATA_WIDTH   : integer := 64;
     C_S_AXI_ADDR_WIDTH   : integer := 32;
     C_S_AXI_AWUSER_WIDTH : integer := 0;
     C_S_AXI_ARUSER_WIDTH : integer := 0;
@@ -373,7 +375,7 @@ begin
 
     v_burst_type := "10";
     v_addr       := x"40000080";
-    v_arsize     := "010";
+    v_arsize     := std_logic_vector(to_unsigned(log2_ceil(C_S_AXI_DATA_WIDTH/8), 3));
     v_arlen      := x"07";
 
     while iteration <= SIMULATION_ITERATIONS loop
@@ -446,14 +448,14 @@ begin
       s_axi_awvalid <= '0';
 
       s_axi_wdata  <= v_expected_data(0);
-      s_axi_wstrb  <= x"f";
+      s_axi_wstrb  <= (others => '1'); -- all bytes are active
       s_axi_wvalid <= '1';
       loop
         if unsigned(v_wlen) = 0 then
           s_axi_wlast <= '1';
         end if;
         wait until rising_edge(ClkxC) and s_axi_wready = '1';
-        s_axi_wstrb <= x"0";
+        s_axi_wstrb <= (others => '0'); -- all bytes unset
         exit when unsigned(v_wlen) = 0;
         v_wlen      := std_logic_vector(unsigned(v_wlen) - 1);
       end loop;

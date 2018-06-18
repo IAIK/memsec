@@ -1,6 +1,6 @@
 #
 # MEMSEC - Framework for building transparent memory encryption and authentication solutions.
-# Copyright (C) 2017 Graz University of Technology, IAIK <mario.werner@iaik.tugraz.at>
+# Copyright (C) 2017-2018 Graz University of Technology, IAIK <mario.werner@iaik.tugraz.at>
 #
 # This file is part of MEMSEC.
 #
@@ -18,64 +18,103 @@
 # along with MEMSEC.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# (re)export all FLOW and GENERIC variables into the environment for the use in the tcl files
+# (re)export all FLOW and GENERIC variables into the environment for the use in the sh and tcl files
 GENERICS  := $(filter GENERIC_%,$(.VARIABLES))
 FLOW_VARS := $(filter FLOW_%,$(.VARIABLES))
 export ${GENERICS}
 export ${FLOW_VARS}
 
-DEFAULT_INFO_VARS := FLOW_DEFAULT_BACKEND \
-                     FLOW_SOURCE_DIR \
-                     FLOW_SCRIPT_DIR \
-                     FLOW_BINARY_ROOT_DIR \
-                     FLOW_BINARY_DIR \
-                     FLOW_MODULE \
-                     FLOW_HDLTOP \
-                     FLOW_SIMTOP \
-                     FLOW_HDL_FILES \
-                     FLOW_SIMHDL_FILES \
-                     FLOW_SIMULATION_TIME \
-                     FLOW_MODULES \
-                     FLOW_BACKENDS
-OTHER_FLOW_VARS := $(filter-out ${DEFAULT_INFO_VARS} ${BACKEND_INFO_VARS},${FLOW_VARS})
+OTHER_FLOW_VARS := $(filter-out ${DEFAULT_INFO_VARS} ${HIDDEN_INFO_VARS} ${STANDARD_MODULE_PROPERTIES} ${BACKEND_INFO_VARS},${FLOW_VARS})
 
 # assert that a default backend exists
-ifndef FLOW_DEFAULT_BACKEND
-$(error No FLOW_DEFAULT_BACKEND backend has been found! Make sure that the necessary EDA tools are installed.)
+ifndef FLOW_BACKEND
+$(error No FLOW_BACKEND backend has been found! Make sure that the necessary EDA tools are installed.)
 endif
 
 # aliases for the backend specific targets
 .PHONY: project hdlsb hdlsg synthcb implcb
-project: info ${FLOW_DEFAULT_BACKEND}_project
-hdlsb: info ${FLOW_DEFAULT_BACKEND}_hdlsb
-hdlsg: info ${FLOW_DEFAULT_BACKEND}_hdlsg
-synthcb: info ${FLOW_DEFAULT_BACKEND}_synthcb
-implcb: info ${FLOW_DEFAULT_BACKEND}_implcb
+project: ${FLOW_BACKEND}_project
+hdlsb: ${FLOW_BACKEND}_hdlsb
+hdlsg: ${FLOW_BACKEND}_hdlsg
+synthcb: ${FLOW_BACKEND}_synthcb
+implcb: ${FLOW_BACKEND}_implcb
 
 .PHONY: info
 info:
-	@echo "SOURCE_DIR:      ${FLOW_SOURCE_DIR}"
-	@echo "SCRIPT_DIR:      ${FLOW_SCRIPT_DIR}"
-	@echo "BINARY_ROOT_DIR: ${FLOW_BINARY_ROOT_DIR}"
+	@$(call printStep,"### ${FLOW_MODULE}: calling $@")
+ifdef VERBOSE
+	@echo "Directory configuration:"
+	@echo "FLOW_DIR:        ${FLOW_DIR}"
 	@echo "BINARY_DIR:      ${FLOW_BINARY_DIR}"
-	@echo ""
-	@echo "Available modules:"
-	@$(foreach var,$(sort ${FLOW_MODULES}),echo "    ${var}";)
+	@echo "BINARY_ROOT_DIR: ${FLOW_BINARY_ROOT_DIR}"
+	@echo "SOURCE_DIR:      ${FLOW_SOURCE_DIR}"
+	@echo "SOURCE_SCRIPT:   ${FLOW_SOURCE_SCRIPT}"
 	@echo ""
 	@echo "Available Backends:"
 	@$(foreach var,$(sort ${FLOW_BACKENDS}),echo "    ${var}";)
 	@echo ""
-	@echo "FLOW_DEFAULT_BACKEND: ${FLOW_DEFAULT_BACKEND}"
-	@echo "FLOW_MODULE:          ${FLOW_MODULE}"
-ifdef FLOW_HDLTOP
-	@echo "FLOW_HDLTOP:          ${FLOW_HDLTOP}"
-endif # FLOW_HDLTOP
-ifdef FLOW_SIMTOP
-	@echo "FLOW_SIMTOP:          ${FLOW_SIMTOP}"
-endif # FLOW_SIMTOP
-ifdef FLOW_SIMULATION_TIME
-	@echo "FLOW_SIMULATION_TIME: ${FLOW_SIMULATION_TIME}"
-endif # FLOW_SIMULATION_TIME
+	@echo "Available modules:"
+	@$(foreach var,$(sort ${FLOW_MODULES}),echo "    ${var}";)
+	@echo ""
+endif # VERBOSE
+	@echo "FLOW_BACKEND:           ${FLOW_BACKEND}"
+	@echo "FLOW_MODULE:            ${FLOW_MODULE}"
+ifdef FLOW_HDL_TOP
+	@echo "FLOW_HDL_TOP:           ${FLOW_HDL_TOP}"
+endif # FLOW_HDL_TOP
+ifdef FLOW_SIM_TOP
+	@echo "FLOW_SIM_TOP:           ${FLOW_SIM_TOP}"
+endif # FLOW_SIM_TOP
+ifdef FLOW_LIBRARY_NAME
+	@echo "FLOW_LIBRARY_NAME:      ${FLOW_LIBRARY_NAME}"
+endif # FLOW_LIBRARY_NAME
+ifdef FLOW_DEPENDENCIES
+	@echo "FLOW_DEPENDENCIES:      ${FLOW_DEPENDENCIES}"
+endif # FLOW_DEPENDENCIES
+ifdef FLOW_SIM_DEPENDENCIES
+	@echo "FLOW_SIM_DEPENDENCIES:  ${FLOW_SIM_DEPENDENCIES}"
+endif # FLOW_SIM_DEPENDENCIES
+ifdef FLOW_FULL_DEPENDENCIES
+	@echo "FLOW_FULL_DEPENDENCIES: ${FLOW_FULL_DEPENDENCIES}"
+endif # FLOW_FULL_DEPENDENCIES
+ifdef FLOW_SIM_RESULT_FILE
+	@echo "FLOW_SIM_RESULT_FILE:   ${FLOW_SIM_RESULT_FILE}"
+endif # FLOW_SIM_RESULT_FILE
+ifdef FLOW_SIM_RESULT_REGEX
+	@echo "FLOW_SIM_RESULT_REGEX:  ${FLOW_SIM_RESULT_REGEX}"
+endif # FLOW_SIM_RESULT_REGEX
+ifdef FLOW_SIM_RESULT_RULE
+	@echo "FLOW_SIM_RESULT_RULE:   ${FLOW_SIM_RESULT_RULE}"
+endif # FLOW_SIM_RESULT_RULE
+ifdef FLOW_SIM_TIME
+	@echo "FLOW_SIM_TIME:          ${FLOW_SIM_TIME}"
+endif # FLOW_SIM_TIME
+ifdef VERBOSE
+	@echo ""
+ifdef FLOW_FULL_DEPENDENCY_DIRS
+	@echo "FLOW_FULL_DEPENDENCY_DIRS: ${FLOW_FULL_DEPENDENCY_DIRS}"
+endif # FLOW_FULL_DEPENDENCY_DIRS
+ifdef FLOW_FILES
+	@echo ""
+	@echo "Files: (FLOW_FILES)"
+	@$(foreach var,$(sort ${FLOW_FILES}),echo "    ${var}";)
+endif # FLOW_FILES
+ifdef FLOW_HDL_FILES
+	@echo ""
+	@echo "HDL files: (FLOW_HDL_FILES)"
+	@$(foreach var,$(sort ${FLOW_HDL_FILES}),echo "    ${var}";)
+endif # FLOW_HDL_FILES
+ifdef FLOW_SIM_FILES
+	@echo ""
+	@echo "SIML files: (FLOW_SIM_FILES)"
+	@$(foreach var,$(sort ${FLOW_SIM_FILES}),echo "    ${var}";)
+endif # FLOW_SIM_FILES
+ifdef FLOW_SIM_HDL_FILES
+	@echo ""
+	@echo "SIM_HDL files: (FLOW_SIM_HDL_FILES)"
+	@$(foreach var,$(sort ${FLOW_SIM_HDL_FILES}),echo "    ${var}";)
+endif # FLOW_SIM_HDL_FILES
+endif # VERBOSE
 ifdef GENERICS
 	@echo ""
 	@echo "Overwritten generics: (GENERIC_*)"
@@ -91,15 +130,10 @@ ifdef OTHER_FLOW_VARS
 	@echo "Other variables: (FLOW_*)"
 	@$(foreach var,$(sort ${OTHER_FLOW_VARS}),echo "    ${var}=${${var}}";)
 endif # OTHER_FLOW_VARS
-ifdef VERBOSE
 	@echo ""
-	@echo "HDL files: (FLOW_HDL_FILES)"
-	@$(foreach var,$(sort ${FLOW_HDL_FILES}),echo "    ${var}";)
-	@echo ""
-	@echo "SIMHDL files: (FLOW_SIMHDL_FILES)"
-	@$(foreach var,$(sort ${FLOW_SIMHDL_FILES}),echo "    ${var}";)
-endif # VERBOSE
-	@echo ""
+ifeq (${FLOW_VERBOSITY},3)
+	@$(foreach module,$(FLOW_FULL_DEPENDENCIES),$(call makeTarget,FLOW_MODULE=$(module) FLOW_VERBOSITY=2 $@);)
+endif
 
 .PHONY: help
 help:
@@ -129,8 +163,14 @@ endif # BACKEND_HELP_TEXT
 
 .PHONY: clean
 clean:
-	rm -rf ${FLOW_BINARY_DIR}
+	@$(call printStep,"### ${FLOW_MODULE}: removing the binary directory of the module")
+	@$(call printStep,"$$ rm -rf ${FLOW_BINARY_DIR}")
+	@rm -rf ${FLOW_BINARY_DIR}
+	@$(call printStep,"")
 
 .PHONY: distclean
 distclean:
-	rm -rf ${FLOW_BINARY_ROOT_DIR}
+	@$(call printStep,"### removing all binary directories")
+	@$(call printStep,"$$ rm -rf ${FLOW_BINARY_ROOT_DIR}")
+	@rm -rf ${FLOW_BINARY_ROOT_DIR}
+	@$(call printStep,"")

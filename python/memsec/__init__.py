@@ -107,7 +107,7 @@ def buildBitStream(module,bdGenericsDict={},optionsDict={}):
   sumDict     = merge_dicts(bdGenericsDict, optionsDict)
   configureDatastreamDataWidth(optionsDict.pop('DATASTREAM_DATA_WIDTH',64))
   varStrings  = ["{}={}".format(bdGenericName(module,k),v) for k,v in bdGenericsDict.items()]
-  varStrings += ["{}=\"{}\"".format(k,v) for k,v in optionsDict.items()]
+  varStrings += ["{}{}=\"{}\"".format(module,k,v) for k,v in optionsDict.items()]
   res = run(module,['implcb', 'clean'], binaryDirName(sumDict),varStrings)
   return [merge_dicts(res, { 'OPTIONS': sumDict })]
 
@@ -115,7 +115,7 @@ def runTest(module,genericsDict={},optionsDict={}):
   sumDict     = merge_dicts(genericsDict, optionsDict)
   configureDatastreamDataWidth(optionsDict.pop('DATASTREAM_DATA_WIDTH',64))
   varStrings  = ["{}GENERIC_{}=\"{}\"".format(module,k,v) for k,v in genericsDict.items()]
-  varStrings += ["{}=\"{}\"".format(k,v) for k,v in optionsDict.items()]
+  varStrings += ["{}{}=\"{}\"".format(module,k,v) for k,v in optionsDict.items()]
   res = run(module,['hdlsb', 'clean'], binaryDirName(sumDict),varStrings)
   return [merge_dicts(res, { 'OPTIONS': sumDict })]
 

@@ -1,6 +1,6 @@
 #
 # MEMSEC - Framework for building transparent memory encryption and authentication solutions.
-# Copyright (C) 2017 Graz University of Technology, IAIK <mario.werner@iaik.tugraz.at>
+# Copyright (C) 2017-2018 Graz University of Technology, IAIK <mario.werner@iaik.tugraz.at>
 #
 # This file is part of MEMSEC.
 #
@@ -19,7 +19,8 @@
 #
 open_project $env(FLOW_MODULE).xpr
 
-set package_file "$env(FLOW_SOURCE_DIR)/component.xml"
+set package_file "$env(FLOW_VIVADO_PACKAGE_XML)"
+set package_dir [file dirname $package_file]
 if { [file exists "$package_file"] == 1 } {
   ipx::open_core $package_file
   set revision [get_property core_revision [ipx::current_core]]
@@ -29,7 +30,7 @@ if { [file exists "$package_file"] == 1 } {
   ipx::merge_project_changes files [ipx::current_core]
   ipx::merge_project_changes ports [ipx::current_core]
 } else {
-  ipx::package_project -root_dir $env(FLOW_SOURCE_DIR) -vendor IAIK -library IAIK -taxonomy /UserIP -force
+  ipx::package_project -root_dir $package_dir -vendor IAIK -library IAIK -taxonomy /UserIP -force
   set_property core_revision 1 [ipx::current_core]
   set_property supported_families {zynq Beta} [ipx::current_core]
 }

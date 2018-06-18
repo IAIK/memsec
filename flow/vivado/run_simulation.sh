@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # MEMSEC - Framework for building transparent memory encryption and authentication solutions.
 # Copyright (C) 2017-2018 Graz University of Technology, IAIK <mario.werner@iaik.tugraz.at>
@@ -18,9 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with MEMSEC.  If not, see <http://www.gnu.org/licenses/>.
 #
-shopt -s expand_aliases
 PWD=$(pwd)
 DATE=$(date)
+LATEST_SIM_LOG_FILE=${FLOW_MODULE}_${FLOW_SIM_TOP}_latest_simulation.log
 
 # define the log command which writes to the logfile and possibly to stdout
 if [ ${FLOW_VERBOSITY} -ge 2 ]; then
@@ -40,35 +40,12 @@ if [ -z "${FLOW_SIM_TOP}" ]; then
   exit 1
 fi
 
-# add the directories of all dependencies to the compile options
-GHDL_COMPILE_OPTIONS="${FLOW_GHDL_CFLAGS}"
-for I in ${FLOW_FULL_DEPENDENCY_DIRS}
-do
-  GHDL_COMPILE_OPTIONS="${GHDL_COMPILE_OPTIONS} -P${I}"
-done
-
-# Analyse and elaborate the design
-echo "\$ ${FLOW_GHDL_BINARY} -m ${GHDL_COMPILE_OPTIONS} ${FLOW_SIM_TOP}" 2>&1 | log
-${FLOW_GHDL_BINARY} -m ${GHDL_COMPILE_OPTIONS} ${FLOW_SIM_TOP} 2>&1 | log
-RETURN_VALUE=${PIPESTATUS[0]}
-if [ $RETURN_VALUE -ne "0" ]; then
-  exit $RETURN_VALUE
-fi
-
-# generate the ghdl command line flags
-GHDL_RUN_OPTIONS="${FLOW_GHDL_RFLAGS} --stop-time=${FLOW_SIM_TIME}"
-if [ "1" = "${FLOW_GTKWAVE_GUI}" ] || [ "1" = "${FLOW_WRITE_GHW}" ]; then
-  GHDL_RUN_OPTIONS="${GHDL_RUN_OPTIONS} --wave=${FLOW_SIM_TOP}.ghw"
-fi
-if [ "1" = "${FLOW_WRITE_VCD}" ]; then
-  GHDL_RUN_OPTIONS="${GHDL_RUN_OPTIONS} --vcd=${FLOW_SIM_TOP}.vcd"
-fi
-
+# delete result files if used
 case ${FLOW_SIM_RESULT_RULE} in
   file-*)
   # set the result file to the log file if it is undefined
   if [ -z "${FLOW_SIM_RESULT_FILE}" ]; then
-    FLOW_SIM_RESULT_FILE="${FLOW_MODULE}_${FLOW_SIM_TOP}_latest_simulation.log"
+    FLOW_SIM_RESULT_FILE="${LATEST_SIM_LOG_FILE}"
   fi
   # delete the result file if it is used and already exists
   if [ -f ${FLOW_SIM_RESULT_FILE} ]; then
@@ -78,20 +55,15 @@ case ${FLOW_SIM_RESULT_RULE} in
   ;;
 esac
 
-# convert the generics into ghdl options
-GENERICS=$(env | grep -e "^GENERIC_" | xargs)
-for I in ${GENERICS}
-do
-  GHDL_RUN_OPTIONS="${GHDL_RUN_OPTIONS} -g${I#GENERIC_}"
-done
-
 # run the simulation
-echo "\$ ${FLOW_GHDL_BINARY} -r ${GHDL_COMPILE_OPTIONS} ${FLOW_SIM_TOP} ${GHDL_RUN_OPTIONS}" 2>&1 | log
-${FLOW_GHDL_BINARY} -r ${GHDL_COMPILE_OPTIONS} ${FLOW_SIM_TOP} ${GHDL_RUN_OPTIONS} 2>&1 | tee "${FLOW_MODULE}_${FLOW_SIM_TOP}_latest_simulation.log" | log
-RETURN_VALUE=${PIPESTATUS[0]}
-if [ $RETURN_VALUE -ne "0" ] && [ "sim-return" = "${FLOW_SIM_RESULT_RULE}" ]; then
-  echo "RESULT: Simulation failed. Simulator exited with return value \"${RETURN_VALUE}\"." 2>&1 | log
-  exit $RETURN_VALUE
+echo "\$ ${FLOW_VIVADO_BINARY} -nojournal -nolog -mode batch -source ${FLOW_DIR}/vivado/run_simulation.tcl" 2>&1 | log
+${FLOW_VIVADO_BINARY} -nojournal -nolog -mode batch -source ${FLOW_DIR}/vivado/run_simulation.tcl 2>&1 | tee "${LATEST_SIM_LOG_FILE}" | log
+
+# unfortunately, vivado does not return errors -> grep for simulation launch error message
+LAUNCH_FAIL=$(cat "${LATEST_SIM_LOG_FILE}" | grep -Eq  "^Launching the simulation failed!"; echo $?)
+if [ ${LAUNCH_FAIL} -eq "0" ] && [ "sim-return" = "${FLOW_SIM_RESULT_RULE}" ]; then
+  echo "RESULT: Simulation failed." 2>&1 | log
+  exit 1
 fi
 
 # determine the exit code of the simulation
@@ -100,9 +72,9 @@ case ${FLOW_SIM_RESULT_RULE} in
   EXIT_CODE=1
   # check if the result file exists and check its contents
   if [ -f ${FLOW_SIM_RESULT_FILE} ]; then
-    COMP=$(cat "${FLOW_SIM_RESULT_FILE}" | grep -Eq  "${FLOW_SIM_RESULT_REGEX}"; echo $?)
-    if [ $COMP -eq "0" ]; then
-      echo "RESULT: Simulation succeeded." 2>&1 | log
+    COMP=$(cat "${FLOW_SIM_RESULT_FILE}" | grep -Eq "${FLOW_SIM_RESULT_REGEX}"; echo $?)
+    if [ ${COMP} -eq "0" ]; then
+      echo "RESULT: Simulation succeeded" 2>&1 | log
       EXIT_CODE=0
     else
       echo "RESULT: Simulation failed." 2>&1 | log
@@ -117,12 +89,12 @@ case ${FLOW_SIM_RESULT_RULE} in
   EXIT_CODE=0
   # check if the result file exists and check its contents
   if [ -f ${FLOW_SIM_RESULT_FILE} ]; then
-    COMP=$(cat "${FLOW_SIM_RESULT_FILE}" | grep -Eq  "${FLOW_SIM_RESULT_REGEX}"; echo $?)
-    if [ $COMP -eq "0" ]; then
+    COMP=$(cat "${FLOW_SIM_RESULT_FILE}" | grep -Eq "${FLOW_SIM_RESULT_REGEX}"; echo $?)
+    if [ ${COMP} -eq "0" ]; then
       echo "RESULT: Simulation failed." 2>&1 | log
       EXIT_CODE=1
     else
-      echo "RESULT: Simulation succeeded." 2>&1 | log
+      echo "RESULT: Simulation succeeded" 2>&1 | log
     fi
   else
     echo "RESULT: Timeout. Result file \"${FLOW_SIM_RESULT_FILE}\" not found." 2>&1 | log
@@ -138,26 +110,5 @@ case ${FLOW_SIM_RESULT_RULE} in
   EXIT_CODE=1
   ;;
 esac
-
-# launch gtkwave if requested
-if [ "1" = "${FLOW_GTKWAVE_GUI}" ]; then
-  if [ "" = "${FLOW_GTKWAVE_BINARY}" ]; then
-    echo "" 2>&1 | log
-    echo "ERROR: gtkwave has not been found, consider opening the ghw file manually" 2>&1 | log
-    echo "ERROR: ghw-file: ${FLOW_BINARY_DIR}/${FLOW_SIM_TOP}.ghw" 2>&1 | log
-    echo "" 2>&1 | log
-  else
-    GTKWAVE_RUN_OPTIONS="${FLOW_SIM_TOP}.ghw"
-    if [ -f "${FLOW_SIM_TOP}.sav" ]; then
-      GTKWAVE_RUN_OPTIONS="${GTKWAVE_RUN_OPTIONS} ${FLOW_SIM_TOP}.sav"
-    fi
-    if [ -f "${FLOW_SIM_TOP}.gtkw" ]; then
-      GTKWAVE_RUN_OPTIONS="${FLOW_SIM_TOP}.gtkw"
-    fi
-
-    echo "\$ ${FLOW_GTKWAVE_BINARY} ${GTKWAVE_RUN_OPTIONS} &" 2>&1 | log
-    ${FLOW_GTKWAVE_BINARY} ${GTKWAVE_RUN_OPTIONS} 2>&1 | log &
-  fi
-fi
 
 exit ${EXIT_CODE}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # MEMSEC - Framework for building transparent memory encryption and authentication solutions.
-# Copyright (C) 2017 Graz University of Technology, IAIK <mario.werner@iaik.tugraz.at>
+# Copyright (C) 2017-2018 Graz University of Technology, IAIK <mario.werner@iaik.tugraz.at>
 #
 # This file is part of MEMSEC.
 #
@@ -30,16 +30,16 @@ res = []
 
 # determine the default backend which will be used for the tests
 infoOutput = subprocess.check_output(["make", "info"]).decode()
-backend = re.search('FLOW_DEFAULT_BACKEND: (\w+)', infoOutput).group(1)
+backend = re.search('FLOW_BACKEND:\s+(\w+)', infoOutput).group(1)
 
 # Test the cryptographic primitives alone
 for r in [5,6,7]:
- res += runTest(module, {'ROUNDS': r}, {'FLOW_SIMTOP': 'tb_qarma'})
-res += runTest(module, {}, {'FLOW_SIMTOP': 'tb_prince'})
-res += runTest(module, {}, {'FLOW_SIMTOP': 'tb_aes'})
+  res += runTest(module, {'ROUNDS': r}, {'FLOW_SIM_TOP': 'tb_qarma'})
+res += runTest(module, {}, {'FLOW_SIM_TOP': 'tb_prince'})
+res += runTest(module, {}, {'FLOW_SIM_TOP': 'tb_aes'})
 res[-1]['ERROR'] = not res[-1]['ERROR'] # the AES test is currently expected to fail
 for r in [1,2,3,6]:
-  res += runTest(module, {'UNROLED_ROUNDS': r}, {'FLOW_SIMTOP': 'tb_ascon'})
+  res += runTest(module, {'UNROLED_ROUNDS': r}, {'FLOW_SIM_TOP': 'tb_ascon'})
 
 # Test the different pipelines
 # ghdl is currently not supported

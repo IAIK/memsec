@@ -59,30 +59,26 @@ Variables and variable overrides are the most powerful and complex part of the f
 
 * `FLOW_MODULE=<modulename>`: (default: `memsec`) The flow supports to manage multiple different modules in one source tree. This variable selects which module is currently active.
 * `BINARY_ROOT_DIR=<path>`: (default: `_build` when make is called in-source or `.` when make is called out-of-source) All build artifacts are generated out-of-source in a build directory which can be overwritten using this variable.
-* `FLOW_HDLTOP=<entity>`: The top module of the design. Important when the module gets packaged as IP core for the use in a block design.
-* `FLOW_SIMTOP=<entity>`: The top module which gets simulated.
-* `FLOW_HDL_FILES=<hdlfiles>`: The HDL files which make up the module. (typically not overwritten via the command line)
-* `FLOW_SIMHDL_FILES=<hdlfiles>`:The HDL files which make up the test bench of the module. (typically not overwritten via the command line)
-* `FLOW_SIMULATION_TIME=<duration>`: (default: `500us`) The time duration which is run in a simulation.
+* `<modulename>FLOW_HDL_TOP=<entity>`: The top module of the design. Important when the module gets packaged as IP core for the use in a block design.
+* `<modulename>FLOW_SIM_TOP=<entity>`: The top module which gets simulated.
+* `<modulename>FLOW_HDL_FILES=<hdlfiles>`: The HDL files which make up the module. (typically not overwritten via the command line)
+* `<modulename>FLOW_SIM_HDL_FILES=<hdlfiles>`:The HDL files which make up the test bench of the module. (typically not overwritten via the command line)
+* `<modulename>FLOW_SIMULATION_TIME=<duration>`: (default: `500us`) The time duration which is run in a simulation.
 
-Besides these more or less static configuration options, also more dynamic options like generics can be specified as simple environment or command line variables. The syntax for overriding generics is as follows: `GENERIC_<parameter>=<value>`
+Besides these more or less static configuration options, also more dynamic options like generics can be specified as simple environment or command line variables. The syntax for overriding generics is as follows: `<modulename>GENERIC_<parameter>=<value>`
 
 Last but not least, also a few Vivado specific options exist. These options mainly deal with Vivado specifics like tcl files to generate block designs and IP cores which can be used for simulation. However, when a block design is used, also the generics for the instantiated IP cores have to be overwritten using the Vivado specific variables.
 
-* `FLOW_VIVADO_SIMIP_FILES=<xcifiles>`: The Vivado IP files (.xci) which are used in the test bench. (typically not overwritten via the command line)
-* `FLOW_VIVADO_IP_REPO_PATHS=<repopaths>`: Paths where the used IP cores are located.
-* `FLOW_VIVADO_BD_TCL_FILE=<tclfile>`: The tcl file which is used to generate the block design in Vivado. (typically exported via the tcl command `write_bd_tcl`)
-* `FLOW_VIVADO_BD_GENERIC_<parameter>_AT_<bdnode>=<value>`: Block design equivalent to the `GENERIC_<parameter>=<value>` variables.
-
-###  Module Variable Overrides
-
-All previously discussed variables get exported from the Makefile when they are defined. However, in order to support multiple modules in the same source tree, module specific versions of these variables are required. The module specific versions of the discussed variables follow the pattern `<modulename><variablename>=<value>` (e.g., `memsecFLOW_HDLTOP=memsec`). Based on the specified `FLOW_MODULE`, the flow assigns these prefixed variables to the variables without prefix if they are not already defined, and exports them as before.
+* `<modulename>FLOW_VIVADO_SIM_IP_FILES=<xcifiles>`: The Vivado IP files (.xci) which are used in the test bench. (typically not overwritten via the command line)
+* `<modulename>FLOW_VIVADO_IP_REPO_PATHS=<repopaths>`: Paths where the used IP cores are located.
+* `<modulename>FLOW_VIVADO_BD_TCL_FILE=<tclfile>`: The tcl file which is used to generate the block design in Vivado. (typically exported via the tcl command `write_bd_tcl`)
+* `<modulename>FLOW_VIVADO_BD_GENERIC_<parameter>_AT_<bdnode>=<value>`: Block design equivalent to the `<modulename>GENERIC_<parameter>=<value>` variables.
 
 ### Examples
 
 * Simulate the default configuration of the framework: `make hdlsb`
-* Simulate the Ascon TEC-Tree (i.e., CRYPTO_CONFIG=2): `make hdlsb GENERIC_CRYPTO_CONFIG=2`
-* Build a bitfile with Prince ECB (i.e., CRYPTO_CONFIG=3): `make vivado_package; make implcb FLOW_MODULE=full_memenc FLOW_VIVADO_BD_GENERIC_CRYPTO_CONFIG_AT_memsec_0=3`
+* Simulate the Ascon TEC-Tree (i.e., CRYPTO_CONFIG=2): `make hdlsb memsecGENERIC_CRYPTO_CONFIG=2`
+* Build a bitfile with Prince ECB (i.e., CRYPTO_CONFIG=3): `make vivado_package; make implcb FLOW_MODULE=full_memenc full_memencFLOW_VIVADO_BD_GENERIC_CRYPTO_CONFIG_AT_memsec_0=3`
 
 As can be seen, specifying multiple parameters potentially leads to very long parameter argument strings, especially during bitfile generation. Therefore, additionally some python tooling is provided to generate the argument lists. Examples for this can be found in `build_bitfiles_fpl_paper.py` and `run_tests.py`.
 

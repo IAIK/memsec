@@ -1,0 +1,2 @@
+close_project
+exit

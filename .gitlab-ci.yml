@@ -2,6 +2,8 @@ vivado:
   image: vivado:2016.2
   tags:
     - vivado
+  before_script:
+    - apt-get update && apt-get install -y gettext-base
   script:
     - python3 run_tests.py
 

@@ -105,11 +105,11 @@ WHITELISTED_VARS := FLOW_BACKEND \
 VIVADO_VARS := $(filter FLOW_VIVADO_%,$(.VARIABLES))
 CLEAR_VARS := $(filter-out ${WHITELISTED_VARS},${DEFAULT_INFO_VARS} ${HIDDEN_INFO_VARS} ${STANDARD_MODULE_PROPERTIES} ${CUSTOM_MODULE_PROPERTIES} ${VIVADO_VARS})
 unexport ${CLEAR_VARS}
-$(foreach var,${CLEAR_VARS},$(eval override undefine ${var}))
+$(foreach var,${CLEAR_VARS},$(eval undefine ${var}))
 
 # clear all generics
 CLEAR_VARS  := $(filter GENERIC_%,$(.VARIABLES))
 $(foreach var,${CLEAR_VARS},$(eval ${var} := ))
 unexport ${CLEAR_VARS}
-$(foreach var,${CLEAR_VARS},$(eval override undefine ${var}))
+$(foreach var,${CLEAR_VARS},$(eval undefine ${var}))
 endif # FLOW_MODULE not empty
